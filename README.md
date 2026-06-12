@@ -13,10 +13,16 @@ application with the carbon math extracted into a pure, unit-tested core.
 ```bash
 npm install
 npm run dev        # start the dev server (Vite)
-npm test           # run the unit tests (Vitest)
+npm test           # unit tests (Vitest) — the carbon math + storage helpers
+npm run test:e2e   # end-to-end tests (Playwright) against the production build
 npm run build      # type-check + production build to dist/
 npm run preview    # serve the production build
 ```
+
+> First e2e run: `npx playwright install chromium` to fetch the browser.
+
+CI (`.github/workflows/ci.yml`) runs type-check → unit → build → e2e on every
+push and PR to `main`.
 
 ## Project layout
 
@@ -32,6 +38,9 @@ src/
   styles.css       ← the "case file" design system
 test/
   audit.test.ts    ← unit tests for the calculation core
+  storage.test.ts  ← unit tests for persistence/comparison helpers
+e2e/
+  app.spec.ts      ← Playwright end-to-end flows (briefing → report, persistence, a11y)
 ```
 
 ## What changed from the original (review fixes)
