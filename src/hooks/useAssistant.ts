@@ -1,4 +1,4 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useRef, useSyncExternalStore } from "react";
 
 export type Mood = "normal" | "excited";
 
@@ -9,21 +9,30 @@ export interface AssistantState {
   muted: boolean;
 }
 
-export interface AssistantApi {
-  state: AssistantState;
+export interface AssistantStore {
   say: (msg: string, mood?: Mood, priority?: boolean) => void;
   toggleMute: () => void;
+  subscribe: (cb: () => void) => () => void;
+  getState: () => AssistantState;
+  dispose: () => void;
 }
 
-type SetState = Dispatch<SetStateAction<AssistantState>>;
+/** Inspector Hoot as an external store. The typewriter updates state ~60×/s;
+ *  keeping it out of React's component state means only the subscribed owl
+ *  re-renders on each tick — not the whole app (which made step transitions
+ *  janky, since the assistant speaks on every navigation). */
+export function createAssistantStore(getReduce: () => boolean): AssistantStore {
+  let state: AssistantState = { text: "", mood: "normal", show: false, muted: false };
+  const subs = new Set<() => void>();
+  const emit = () => subs.forEach((s) => s());
+  const set = (patch: Partial<AssistantState>) => {
+    state = { ...state, ...patch };
+    emit();
+  };
 
-/** Imperative typewriter queue for Inspector Hoot. A single controller is
- *  created per mount so `say`/`toggleMute` keep a stable identity. */
-function createController(setState: SetState, reduceRef: { current: boolean }) {
   const queue: { msg: string; mood: Mood }[] = [];
   let busy = false;
   let lastMsg = "";
-  let muted = false;
   const timers: ReturnType<typeof setTimeout>[] = [];
   const intervals: ReturnType<typeof setInterval>[] = [];
 
@@ -38,7 +47,7 @@ function createController(setState: SetState, reduceRef: { current: boolean }) {
   };
 
   const done = () => {
-    setState((s) => ({ ...s, show: false }));
+    set({ show: false });
     after(next, 350);
   };
 
@@ -50,21 +59,16 @@ function createController(setState: SetState, reduceRef: { current: boolean }) {
     }
     busy = true;
     lastMsg = item.msg;
-    setState((s) => ({
-      ...s,
-      mood: item.mood,
-      show: true,
-      text: reduceRef.current ? item.msg : "",
-    }));
+    set({ mood: item.mood, show: true, text: getReduce() ? item.msg : "" });
 
-    if (reduceRef.current) {
+    if (getReduce()) {
       after(done, 3800);
       return;
     }
     let i = 0;
     const iv = setInterval(() => {
       i++;
-      setState((s) => ({ ...s, text: item.msg.slice(0, i) }));
+      set({ text: item.msg.slice(0, i) });
       if (i >= item.msg.length) {
         clearInterval(iv);
         after(done, 2400 + item.msg.length * 14);
@@ -74,7 +78,7 @@ function createController(setState: SetState, reduceRef: { current: boolean }) {
   }
 
   const say = (msg: string, mood: Mood = "normal", priority = false) => {
-    if (muted || msg === lastMsg) return;
+    if (state.muted || msg === lastMsg) return;
     if (priority) queue.length = 0;
     if (queue.length >= 2) queue.shift();
     queue.push({ msg, mood });
@@ -82,32 +86,41 @@ function createController(setState: SetState, reduceRef: { current: boolean }) {
   };
 
   const toggleMute = () => {
-    muted = !muted;
+    const muted = !state.muted;
     clearAll();
     queue.length = 0;
     busy = false;
-    setState((s) => ({ ...s, muted, show: false }));
+    set({ muted, show: false });
     if (!muted) {
       lastMsg = "";
       say("Back on duty. Carry on, detective.", "excited", true);
     }
   };
 
-  return { say, toggleMute, dispose: clearAll };
+  return {
+    say,
+    toggleMute,
+    subscribe(cb) {
+      subs.add(cb);
+      return () => {
+        subs.delete(cb);
+      };
+    },
+    getState: () => state,
+    dispose: clearAll,
+  };
 }
 
-export function useAssistant(reduceMotion: boolean): AssistantApi {
-  const [state, setState] = useState<AssistantState>({
-    text: "",
-    mood: "normal",
-    show: false,
-    muted: false,
-  });
+/** Create the store once per mount. `say`/`toggleMute` keep a stable identity. */
+export function useAssistantStore(reduceMotion: boolean): AssistantStore {
   const reduceRef = useRef(reduceMotion);
   reduceRef.current = reduceMotion;
+  const ref = useRef<AssistantStore>();
+  if (!ref.current) ref.current = createAssistantStore(() => reduceRef.current);
+  return ref.current;
+}
 
-  const ctrl = useRef<ReturnType<typeof createController>>();
-  if (!ctrl.current) ctrl.current = createController(setState, reduceRef);
-
-  return { state, say: ctrl.current.say, toggleMute: ctrl.current.toggleMute };
+/** Subscribe to the assistant state — call this only inside the owl component. */
+export function useAssistantState(store: AssistantStore): AssistantState {
+  return useSyncExternalStore(store.subscribe, store.getState);
 }

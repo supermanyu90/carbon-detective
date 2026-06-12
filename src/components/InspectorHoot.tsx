@@ -1,14 +1,10 @@
-import type { AssistantState } from "../hooks/useAssistant";
+import { useAssistantState, type AssistantStore } from "../hooks/useAssistant";
 
-/** Inspector Hoot — the owl assistant. Bubble lives in an aria-live region;
- *  the owl itself is a mute/unmute toggle. */
-export function InspectorHoot({
-  state,
-  onToggleMute,
-}: {
-  state: AssistantState;
-  onToggleMute: () => void;
-}) {
+/** Inspector Hoot — the owl assistant. Subscribes to the assistant store on
+ *  its own, so the typewriter's ~60fps updates re-render only this component.
+ *  The bubble lives in an aria-live region; the owl is a mute/unmute toggle. */
+export function InspectorHoot({ store }: { store: AssistantStore }) {
+  const state = useAssistantState(store);
   const cls = `assistant mood-${state.mood}${state.muted ? " muted" : ""}`;
   return (
     <div className={cls}>
@@ -23,7 +19,7 @@ export function InspectorHoot({
         className="asst-char"
         aria-label="Inspector Hoot — tap to mute or unmute the assistant"
         aria-pressed={state.muted}
-        onClick={onToggleMute}
+        onClick={store.toggleMute}
       >
         <svg viewBox="0 0 124 132" width="92" height="98" aria-hidden="true">
           {/* body */}

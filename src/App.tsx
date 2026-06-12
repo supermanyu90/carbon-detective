@@ -12,7 +12,7 @@ import {
 } from "./core/audit";
 import { CLUES } from "./core/clues";
 import { usePrefersReducedMotion, useFinePointer } from "./hooks/useMediaQuery";
-import { useAssistant } from "./hooks/useAssistant";
+import { useAssistantStore } from "./hooks/useAssistant";
 import { throwConfetti } from "./lib/confetti";
 import {
   loadHistory,
@@ -49,7 +49,7 @@ const DEFAULT_CASE_NO = "CASE No. CD-0000 · OPENED TODAY";
 export default function App() {
   const reduceMotion = usePrefersReducedMotion();
   const finePointer = useFinePointer();
-  const asst = useAssistant(reduceMotion);
+  const asst = useAssistantStore(reduceMotion);
   const say = asst.say;
 
   // Restore an in-progress case (if any) exactly once.
@@ -158,6 +158,7 @@ export default function App() {
     }, 50000);
   };
   useEffect(() => stopIdle, []);
+  useEffect(() => () => asst.dispose(), [asst]);
 
   /* ---- Briefing ---- */
   const chooseMode = (m: Mode) => {
@@ -380,7 +381,7 @@ export default function App() {
       </div>
 
       <Spotlight enabled={finePointer && !reduceMotion} />
-      <InspectorHoot state={asst.state} onToggleMute={asst.toggleMute} />
+      <InspectorHoot store={asst} />
     </>
   );
 }

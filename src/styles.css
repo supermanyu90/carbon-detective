@@ -260,6 +260,7 @@ button,a,summary,input,.pill,.mode-btn,.step-tab,.asst-char{cursor:url("data:ima
   pointer-events:none;z-index:99;border-radius:50%;
   background:radial-gradient(circle, rgba(255,238,170,.22) 0%, rgba(255,238,170,0) 62%);
   mix-blend-mode:soft-light;
+  will-change:transform;contain:layout style paint;
 }
 
 /* ============ MOTION ============ */
