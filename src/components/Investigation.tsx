@@ -225,12 +225,12 @@ export function Investigation({
               className="zone"
               key={z}
               open={!!openZones[z]}
-              onToggle={(e) =>
-                setOpenZones((o) => ({
-                  ...o,
-                  [z]: (e.currentTarget as HTMLDetailsElement).open,
-                }))
-              }
+              onToggle={(e) => {
+                // Read .open synchronously — the synthetic event's currentTarget
+                // is nulled out by the time a state-updater callback runs.
+                const isOpen = (e.currentTarget as HTMLDetailsElement).open;
+                setOpenZones((o) => ({ ...o, [z]: isOpen }));
+              }}
             >
               <summary>
                 <span className="zone-ico">{zc[0].ico}</span>
