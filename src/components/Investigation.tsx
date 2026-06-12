@@ -19,6 +19,47 @@ interface Props {
   onBack: () => void;
 }
 
+/** Editable count field with a local draft, so the user can clear it,
+ *  select-replace, and type freely. Commits live; empty commits 0 on blur. */
+function CountInput({
+  value,
+  answered,
+  unit,
+  onSet,
+}: {
+  value: number;
+  answered: boolean;
+  unit: string;
+  onSet: (n: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const shown = draft !== null ? draft : answered ? String(value) : "";
+
+  return (
+    <input
+      className="val"
+      type="number"
+      min={0}
+      max={99}
+      inputMode="numeric"
+      aria-label={`Number of ${unit}`}
+      value={shown}
+      placeholder="–"
+      onFocus={(e) => e.currentTarget.select()}
+      onChange={(e) => {
+        const v = e.target.value;
+        setDraft(v);
+        if (v === "") return; // allow an empty field while typing
+        onSet(Math.max(0, Math.min(99, Math.floor(Number(v) || 0))));
+      }}
+      onBlur={() => {
+        if (draft === "") onSet(0); // empty means "none"
+        setDraft(null);
+      }}
+    />
+  );
+}
+
 function ClueRow({
   c,
   answers,
@@ -73,20 +114,11 @@ function ClueRow({
             <button aria-label="Decrease count" onClick={() => onStepCount(c.id, -1)}>
               −
             </button>
-            <input
-              className="val"
-              type="number"
-              min={0}
-              max={99}
-              inputMode="numeric"
-              aria-label={`Number of ${c.unit}`}
-              value={a?.answered ? a.n : ""}
-              placeholder="–"
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "") return;
-                onSetCount(c.id, Math.max(0, Math.min(99, Number(v) || 0)));
-              }}
+            <CountInput
+              value={a?.n ?? 0}
+              answered={!!a?.answered}
+              unit={c.unit!}
+              onSet={(n) => onSetCount(c.id, n)}
             />
             <button aria-label="Increase count" onClick={() => onStepCount(c.id, 1)}>
               +
