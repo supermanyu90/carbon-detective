@@ -24,6 +24,7 @@ import {
   type ReportSnapshot,
 } from "./lib/storage";
 import { Briefing } from "./components/Briefing";
+import { FieldManual } from "./components/FieldManual";
 import { Investigation } from "./components/Investigation";
 import { Report } from "./components/Report";
 import { InspectorHoot } from "./components/InspectorHoot";
@@ -329,14 +330,17 @@ export default function App() {
 
         <section ref={sectionRef} tabIndex={-1} aria-label={STEP_TABS[step]}>
           {step === 0 && (
-            <Briefing
-              mode={mode}
-              detName={detName}
-              history={history}
-              onSetMode={chooseMode}
-              onSetName={setDetName}
-              onStart={startInvestigation}
-            />
+            <>
+              <Briefing
+                mode={mode}
+                detName={detName}
+                history={history}
+                onSetMode={chooseMode}
+                onSetName={setDetName}
+                onStart={startInvestigation}
+              />
+              <FieldManual />
+            </>
           )}
           {step === 1 && (
             <Investigation
