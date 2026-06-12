@@ -82,7 +82,8 @@ test("guidance: jump to next unanswered and mark remaining", async ({ page }) =>
 test("generates an accessible audit report", async ({ page }) => {
   await beginHome(page);
   await completeAudit(page);
-  await expect(page.locator(".suspects")).toBeVisible();
+  await expect(page.locator(".evidence-board")).toBeVisible();
+  await expect(page.locator(".suspect-card")).toHaveCount(1); // one finding in this flow
   await expect(page.locator(".stamp").filter({ hasText: "Case Closed" })).toBeVisible();
 
   // Expand the "Show the working" methodology table and check its headers.

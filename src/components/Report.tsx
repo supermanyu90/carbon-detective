@@ -11,6 +11,7 @@ import {
 } from "../core/audit";
 import { CountUp } from "./CountUp";
 import { Equivalences } from "./Equivalences";
+import { EvidenceBoard } from "./EvidenceBoard";
 import type { ReportSnapshot } from "../lib/storage";
 
 interface Props {
@@ -150,28 +151,7 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
           <h3 className="disp" style={{ fontSize: "1.2rem", marginTop: 10 }}>
             Prime suspects — fix these first
           </h3>
-          <ul className="suspects">
-            {suspects.map((f, i) => (
-              <li key={f.c.id}>
-                <span className="rank">#{i + 1}</span>
-                <div style={{ flex: 1 }}>
-                  <p className="suspect-name">
-                    {f.c.ico} {f.c.q}
-                    {f.c.type === "count" && (
-                      <span className="mono">
-                        {" "}
-                        (× {f.n} {f.c.unit})
-                      </span>
-                    )}
-                  </p>
-                  <p className="suspect-fix">Recommended fix: {f.c.fix}</p>
-                  <p className="suspect-save">
-                    Saves ≈ {fmt(f.im.co2)} kg CO₂ and ₹{fmt(f.im.cost)} every year
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <EvidenceBoard suspects={suspects} verdict={v.s} />
         </>
       )}
 
