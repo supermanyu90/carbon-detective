@@ -189,6 +189,23 @@ input.val::placeholder{color:var(--ink-soft);opacity:.7}
 .found-note{font-family:var(--mono);font-size:.8rem;color:var(--stamp);margin-top:6px;display:none}
 .clue.found .found-note{display:block}
 
+/* ---- flashlight-reveal clues (fine pointer + motion only) ---- */
+.flashlight-hint{font-family:var(--mono);font-size:.82rem;color:var(--stamp);margin:-4px 0 12px}
+.zones-host.flashlight .clue-main{opacity:.5;filter:saturate(.6);transition:opacity .3s ease, filter .3s ease}
+.zones-host.flashlight .clue:hover .clue-main,
+.zones-host.flashlight .clue:focus-within .clue-main,
+.zones-host.flashlight .clue.found .clue-main{opacity:1;filter:none}
+.zones-host.flashlight .clue{transition:background .3s ease, box-shadow .3s ease}
+.zones-host.flashlight .clue:hover,
+.zones-host.flashlight .clue:focus-within{
+  background:radial-gradient(260px 150px at 30% 50%, rgba(255,238,170,.20), transparent 72%);
+  box-shadow:inset 0 0 0 100vmax rgba(255,238,170,.015);
+}
+.zones-host.flashlight .clue .sev{transform:scale(.55);opacity:.35;transition:transform .3s cubic-bezier(.2,1.4,.4,1), opacity .3s ease}
+.zones-host.flashlight .clue:hover .sev,
+.zones-host.flashlight .clue:focus-within .sev,
+.zones-host.flashlight .clue.found .sev{transform:scale(1);opacity:1}
+
 /* ============ REPORT ============ */
 .report-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:18px}
 .verdict-stamp{font-size:1.25rem;transform:rotate(-7deg)}
@@ -209,6 +226,26 @@ input.val::placeholder{color:var(--ink-soft);opacity:.7}
 
 .equiv{background:var(--ink);color:var(--paper);border-radius:var(--radius);padding:16px 18px;margin:18px 0;font-size:.98rem}
 .equiv strong{color:#fff}
+
+/* ---- animated equivalences ---- */
+.equiv-lead{font-family:var(--mono);font-size:.9rem;opacity:.9;margin-bottom:12px}
+.equiv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.equiv-item{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;
+  background:rgba(247,242,231,.07);border:1px solid rgba(247,242,231,.16);border-radius:10px;padding:14px 10px;overflow:hidden}
+.equiv-ico{font-size:2rem;line-height:1;display:inline-block}
+.equiv-num{font-family:var(--display);font-size:1.5rem;color:#fff}
+.equiv-lbl{font-size:.82rem;opacity:.85;line-height:1.3}
+.equiv-ico.grow{animation:eqGrow 2.4s ease-in-out infinite;transform-origin:bottom center}
+.equiv-ico.drive{animation:eqDrive 2.8s ease-in-out infinite}
+.equiv-ico.charge{animation:eqCharge 2s ease-in-out infinite}
+.equiv-ico.pour{animation:eqPour 2.6s ease-in-out infinite;transform-origin:bottom center}
+@keyframes eqGrow{0%{transform:scale(.55)}55%{transform:scale(1.08)}100%{transform:scale(.55)}}
+@keyframes eqDrive{0%{transform:translateX(-26px)}55%,100%{transform:translateX(26px)}}
+@keyframes eqCharge{0%,100%{filter:grayscale(.7) brightness(.8)}55%{filter:none}}
+@keyframes eqPour{0%,100%{transform:translateY(-3px) rotate(-6deg)}55%{transform:translateY(2px) rotate(8deg)}}
+@media (prefers-reduced-motion: reduce){
+  .equiv-ico.grow,.equiv-ico.drive,.equiv-ico.charge,.equiv-ico.pour{animation:none;transform:none;filter:none}
+}
 
 /* ============ COMPARISON BANNER (vs. last audit) ============ */
 .compare{

@@ -12,6 +12,7 @@ import {
 interface Props {
   mode: Mode;
   answers: Answers;
+  flashlight: boolean;
   onAnswerYN: (id: string, yes: boolean) => void;
   onStepCount: (id: string, delta: number) => void;
   onSetCount: (id: string, n: number) => void;
@@ -140,6 +141,7 @@ function ClueRow({
 export function Investigation({
   mode,
   answers,
+  flashlight,
   onAnswerYN,
   onStepCount,
   onSetCount,
@@ -201,6 +203,12 @@ export function Investigation({
         <span className="mono">{`Evidence: ${found}`}</span>
       </div>
 
+      {flashlight && (
+        <p className="hint flashlight-hint no-print">
+          🔦 Shine your cursor over a clue to bring it into the light.
+        </p>
+      )}
+
       {remaining > 0 && (
         <div className="guide-row no-print">
           <button className="ghost-btn" onClick={jumpToNext}>
@@ -215,7 +223,7 @@ export function Investigation({
         </div>
       )}
 
-      <div>
+      <div className={flashlight ? "zones-host flashlight" : "zones-host"}>
         {zones.map((z, zi) => {
           const zc = clues.filter((c) => c.zone === z);
           const zd = zc.filter((c) => answers[c.id]?.answered).length;

@@ -347,6 +347,7 @@ export default function App() {
             <Investigation
               mode={mode}
               answers={answers}
+              flashlight={finePointer && !reduceMotion}
               onAnswerYN={answerYN}
               onStepCount={stepCount}
               onSetCount={setCount}

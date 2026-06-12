@@ -6,11 +6,11 @@ import {
   totals,
   verdict,
   rank,
-  equivalents,
   fmt,
   type Answers,
 } from "../core/audit";
 import { CountUp } from "./CountUp";
+import { Equivalences } from "./Equivalences";
 import type { ReportSnapshot } from "../lib/storage";
 
 interface Props {
@@ -36,7 +36,6 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
   const ratio = nFound / nClues;
   const v = verdict(ratio);
   const detRank = rank(ratio, nFound);
-  const eq = equivalents(tot);
 
   const filed = filedAt.toLocaleDateString("en-IN", {
     day: "numeric",
@@ -143,20 +142,7 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
       </div>
 
       {tot.co2 > 0 && (
-        <div className="equiv">
-          🌳 Fixing everything in this report equals the yearly work of{" "}
-          <strong>
-            {fmt(Math.max(1, eq.trees))} mature tree{eq.trees >= 1.5 ? "s" : ""}
-          </strong>
-          , or skipping <strong>{fmt(eq.km)} km</strong> of car travel, or{" "}
-          <strong>{fmt(eq.phones)}</strong> smartphone charges
-          {tot.water > 0 && (
-            <>
-              , plus <strong>{fmt(eq.buckets)}</strong> buckets of water saved
-            </>
-          )}
-          .
-        </div>
+        <Equivalences co2={tot.co2} water={tot.water} reduceMotion={reduceMotion} />
       )}
 
       {nFound > 0 && (
