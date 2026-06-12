@@ -11,6 +11,7 @@ import {
   type Answers,
 } from "../core/audit";
 import { CountUp } from "./CountUp";
+import type { ReportSnapshot } from "../lib/storage";
 
 interface Props {
   mode: Mode;
@@ -19,9 +20,11 @@ interface Props {
   reduceMotion: boolean;
   /** Stable timestamp captured when the report was filed. */
   filedAt: Date;
+  /** The most recent earlier audit of this scene, for comparison. */
+  previous: ReportSnapshot | null;
 }
 
-export function Report({ mode, answers, detName, reduceMotion, filedAt }: Props) {
+export function Report({ mode, answers, detName, reduceMotion, filedAt, previous }: Props) {
   const found = useMemo(() => findings(mode, answers), [mode, answers]);
   const tot = useMemo(() => totals(found), [found]);
 
@@ -44,6 +47,22 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt }: Props)
   const suspects = found.slice(0, 3);
   const others = found.slice(3);
 
+  const cmp = previous
+    ? {
+        diff: tot.co2 - previous.co2,
+        pct:
+          previous.co2 > 0
+            ? Math.round((Math.abs(tot.co2 - previous.co2) / previous.co2) * 100)
+            : 0,
+        when: new Date(previous.at).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
+        improved: tot.co2 < previous.co2,
+      }
+    : null;
+
   return (
     <div className="card">
       <div className="report-head">
@@ -65,6 +84,28 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt }: Props)
       </div>
 
       <p>{v.msg}</p>
+
+      {cmp && (
+        <div
+          className={`compare ${cmp.improved ? "better" : cmp.diff > 0 ? "worse" : "flat"}`}
+        >
+          🔁 Compared with your last {mode === "home" ? "home" : "classroom/office"} audit on{" "}
+          {cmp.when}: <strong>{fmt(previous!.co2)} kg → {fmt(tot.co2)} kg</strong>{" "}
+          {cmp.diff === 0 ? (
+            <>— no change yet. Make a fix and re-run.</>
+          ) : cmp.improved ? (
+            <>
+              — that&rsquo;s <strong>{cmp.pct}% less</strong> avoidable CO₂. The fixes are
+              sticking. 🌱
+            </>
+          ) : (
+            <>
+              — <strong>{cmp.pct}% more</strong>. New leaks have crept in; the suspects are
+              below.
+            </>
+          )}
+        </div>
+      )}
 
       <div className="stat-grid">
         <div className="stat red">

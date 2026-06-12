@@ -1,10 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import type { Mode } from "./core/clues";
-import { cluesForMode, severity, zonesForMode, type Answer, type Answers } from "./core/audit";
+import {
+  cluesForMode,
+  findings,
+  severity,
+  totals,
+  verdict,
+  zonesForMode,
+  type Answer,
+  type Answers,
+} from "./core/audit";
 import { CLUES } from "./core/clues";
 import { usePrefersReducedMotion, useFinePointer } from "./hooks/useMediaQuery";
 import { useAssistant } from "./hooks/useAssistant";
 import { throwConfetti } from "./lib/confetti";
+import {
+  loadHistory,
+  loadWip,
+  previousOf,
+  saveHistory,
+  saveWip,
+  upsertHistory,
+  type ReportSnapshot,
+} from "./lib/storage";
 import { Briefing } from "./components/Briefing";
 import { Investigation } from "./components/Investigation";
 import { Report } from "./components/Report";
@@ -25,6 +43,7 @@ const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const clamp = (n: number) => Math.max(0, Math.min(99, n));
 
 const STEP_TABS = ["1 · Briefing", "2 · Investigation", "3 · Audit Report"];
+const DEFAULT_CASE_NO = "CASE No. CD-0000 · OPENED TODAY";
 
 export default function App() {
   const reduceMotion = usePrefersReducedMotion();
@@ -32,15 +51,24 @@ export default function App() {
   const asst = useAssistant(reduceMotion);
   const say = asst.say;
 
-  const [step, setStep] = useState(0);
-  const [mode, setMode] = useState<Mode>("home");
-  const [detName, setDetName] = useState("");
-  const [answers, setAnswers] = useState<Answers>({});
-  const [investigationUnlocked, setInvestigationUnlocked] = useState(false);
-  const [reportUnlocked, setReportUnlocked] = useState(false);
-  const [caseNo, setCaseNo] = useState("CASE No. CD-0000 · OPENED TODAY");
-  const [stampText, setStampText] = useState("Open Case");
-  const [filedAt, setFiledAt] = useState<Date>(() => new Date());
+  // Restore an in-progress case (if any) exactly once.
+  const wip0 = useRef(loadWip()).current;
+
+  const [step, setStep] = useState(wip0?.step ?? 0);
+  const [mode, setMode] = useState<Mode>(wip0?.mode ?? "home");
+  const [detName, setDetName] = useState(wip0?.detName ?? "");
+  const [answers, setAnswers] = useState<Answers>(wip0?.answers ?? {});
+  const [investigationUnlocked, setInvestigationUnlocked] = useState(
+    wip0?.investigationUnlocked ?? false,
+  );
+  const [reportUnlocked, setReportUnlocked] = useState(wip0?.reportUnlocked ?? false);
+  const [caseNo, setCaseNo] = useState(wip0?.caseNo ?? DEFAULT_CASE_NO);
+  const [stampText, setStampText] = useState(wip0?.stampText ?? "Open Case");
+  const [filedAt, setFiledAt] = useState<Date>(() =>
+    wip0?.filedAt ? new Date(wip0.filedAt) : new Date(),
+  );
+  const [history, setHistory] = useState<ReportSnapshot[]>(() => loadHistory());
+  const [previousSnapshot, setPreviousSnapshot] = useState<ReportSnapshot | null>(null);
 
   // Mirror of answers for synchronous reads inside rapid-fire handlers.
   const answersRef = useRef(answers);
@@ -53,19 +81,59 @@ export default function App() {
   const sectionRef = useRef<HTMLElement>(null);
   const mounted = useRef(false);
 
-  /* ---- Greeting ---- */
+  /* ---- Seed cleared-zone tracking from any restored answers (once) ---- */
   useEffect(() => {
+    const cz = new Set<string>();
+    const clues = cluesForMode(mode);
+    for (const z of zonesForMode(mode)) {
+      if (clues.filter((c) => c.zone === z).every((c) => answers[c.id]?.answered)) cz.add(z);
+    }
+    clearedZones.current = cz;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ---- Autosave the in-progress case ---- */
+  useEffect(() => {
+    saveWip({
+      v: 1,
+      mode,
+      detName,
+      answers,
+      caseNo,
+      stampText,
+      investigationUnlocked,
+      reportUnlocked,
+      step,
+      filedAt: filedAt.toISOString(),
+    });
+  }, [
+    mode,
+    detName,
+    answers,
+    caseNo,
+    stampText,
+    investigationUnlocked,
+    reportUnlocked,
+    step,
+    filedAt,
+  ]);
+
+  /* ---- Greeting (welcome back if a case was restored) ---- */
+  useEffect(() => {
+    const resumed = wip0 && (wip0.step > 0 || Object.keys(wip0.answers).length > 0);
     const t = setTimeout(
       () =>
         say(
-          "Inspector Hoot, at your service. Pick a scene and we’ll sniff out the wasted watts.",
+          resumed
+            ? "Welcome back, detective. Your case file was right where you left it."
+            : "Inspector Hoot, at your service. Pick a scene and we’ll sniff out the wasted watts.",
           "excited",
           true,
         ),
       900,
     );
     return () => clearTimeout(t);
-  }, [say]);
+  }, [say, wip0]);
 
   /* ---- Focus the active section on step change (skip first mount) ---- */
   useEffect(() => {
@@ -136,7 +204,6 @@ export default function App() {
         else if (Math.random() < 0.4) say(pick(MOD_LINES));
       }
     }
-    // Zone-cleared / all-done detection.
     const clues = cluesForMode(mode);
     for (const z of zonesForMode(mode)) {
       const zc = clues.filter((c) => c.zone === z);
@@ -167,13 +234,37 @@ export default function App() {
 
   /* ---- Report ---- */
   const generateReport = () => {
-    setFiledAt(new Date());
+    const now = new Date();
+    setFiledAt(now);
+
+    const f = findings(mode, answersRef.current);
+    const t = totals(f);
+    const nFound = f.length;
+    const nClues = cluesForMode(mode).length;
+    const snap: ReportSnapshot = {
+      at: now.toISOString(),
+      caseNo,
+      mode,
+      name: detName.trim() || "Detective",
+      co2: t.co2,
+      cost: t.cost,
+      kwh: t.kwh,
+      water: t.water,
+      fuel: t.fuel,
+      nFound,
+      nClues,
+      verdict: verdict(nFound / nClues).s,
+    };
+    setPreviousSnapshot(previousOf(history, mode, caseNo));
+    const nextHistory = upsertHistory(history, snap);
+    setHistory(nextHistory);
+    saveHistory(nextHistory);
+
     setReportUnlocked(true);
     setStampText("Case Closed");
     setStep(2);
     stopIdle();
     window.scrollTo({ top: 0, behavior: "smooth" });
-    const nFound = cluesForMode(mode).filter((c) => answersRef.current[c.id]?.found).length;
     if (nFound > 0 && !reduceMotion) throwConfetti();
     say(
       nFound === 0
@@ -190,8 +281,9 @@ export default function App() {
     clearedZones.current = new Set();
     setInvestigationUnlocked(false);
     setReportUnlocked(false);
+    setPreviousSnapshot(null);
     setStampText("Open Case");
-    setCaseNo("CASE No. CD-0000 · OPENED TODAY");
+    setCaseNo(DEFAULT_CASE_NO);
     setStep(0);
     say("Fresh case file. Where shall we look this time?", "excited", true);
   };
@@ -240,6 +332,7 @@ export default function App() {
             <Briefing
               mode={mode}
               detName={detName}
+              history={history}
               onSetMode={chooseMode}
               onSetName={setDetName}
               onStart={startInvestigation}
@@ -264,6 +357,7 @@ export default function App() {
                 detName={detName}
                 reduceMotion={reduceMotion}
                 filedAt={filedAt}
+                previous={previousSnapshot}
               />
               <div className="actions-row no-print">
                 <button className="btn" onClick={() => window.print()}>

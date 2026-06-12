@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Mode, Clue } from "../core/clues";
 import {
   cluesForMode,
@@ -40,7 +40,7 @@ function ClueRow({
     : "";
 
   return (
-    <div className={`clue${found ? " found" : ""}`}>
+    <div className={`clue${found ? " found" : ""}`} id={`clue-${c.id}`} tabIndex={-1}>
       <div className="clue-main">
         <p className="clue-q">{c.q}</p>
         <p className="clue-why">{c.why}</p>
@@ -69,22 +69,25 @@ function ClueRow({
         </div>
       ) : (
         <div className="clue-ctrl">
-          <div
-            className="stepper"
-            role="group"
-            aria-label={`Count of ${c.unit}`}
-          >
+          <div className="stepper" role="group" aria-label={`Count of ${c.unit}`}>
             <button aria-label="Decrease count" onClick={() => onStepCount(c.id, -1)}>
               −
             </button>
-            <span
+            <input
               className="val"
-              role="status"
-              aria-live="polite"
-              aria-label={a?.answered ? `${a.n} ${c.unit}` : `no ${c.unit} counted yet`}
-            >
-              {a?.answered ? a.n : "–"}
-            </span>
+              type="number"
+              min={0}
+              max={99}
+              inputMode="numeric"
+              aria-label={`Number of ${c.unit}`}
+              value={a?.answered ? a.n : ""}
+              placeholder="–"
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "") return;
+                onSetCount(c.id, Math.max(0, Math.min(99, Number(v) || 0)));
+              }}
+            />
             <button aria-label="Increase count" onClick={() => onStepCount(c.id, 1)}>
               +
             </button>
@@ -114,10 +117,47 @@ export function Investigation({
   const clues = useMemo(() => cluesForMode(mode), [mode]);
   const zones = useMemo(() => zonesForMode(mode), [mode]);
 
+  const [openZones, setOpenZones] = useState<Record<string, boolean>>(() => ({
+    [zones[0]]: true,
+  }));
+  const [scrollTarget, setScrollTarget] = useState<string | null>(null);
+
+  // Reset open state if the scene changes (e.g. after returning to briefing).
+  useEffect(() => {
+    setOpenZones({ [zones[0]]: true });
+  }, [mode, zones]);
+
   const done = clues.filter((c) => answers[c.id]?.answered).length;
   const found = clues.filter((c) => answers[c.id]?.found).length;
   const allDone = done === clues.length;
   const remaining = clues.length - done;
+  const firstUnanswered = clues.find((c) => !answers[c.id]?.answered);
+
+  const jumpToNext = () => {
+    if (!firstUnanswered) return;
+    setOpenZones((o) => ({ ...o, [firstUnanswered.zone]: true }));
+    setScrollTarget(firstUnanswered.id);
+  };
+
+  const markRemaining = () => {
+    for (const c of clues) {
+      if (!answers[c.id]?.answered) {
+        if (c.type === "yn") onAnswerYN(c.id, false);
+        else onSetCount(c.id, 0);
+      }
+    }
+  };
+
+  // After a "jump", open the zone (state) then scroll/focus the clue.
+  useEffect(() => {
+    if (!scrollTarget) return;
+    const el = document.getElementById(`clue-${scrollTarget}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.focus({ preventScroll: true });
+    }
+    setScrollTarget(null);
+  }, [scrollTarget]);
 
   return (
     <>
@@ -129,13 +169,37 @@ export function Investigation({
         <span className="mono">{`Evidence: ${found}`}</span>
       </div>
 
+      {remaining > 0 && (
+        <div className="guide-row no-print">
+          <button className="ghost-btn" onClick={jumpToNext}>
+            ↳ Go to next unanswered clue
+            <span className="ghost-count">{remaining}</span>
+          </button>
+          {done > 0 && (
+            <button className="ghost-btn" onClick={markRemaining}>
+              Mark remaining as &ldquo;no waste&rdquo;
+            </button>
+          )}
+        </div>
+      )}
+
       <div>
         {zones.map((z, zi) => {
           const zc = clues.filter((c) => c.zone === z);
           const zd = zc.filter((c) => answers[c.id]?.answered).length;
           const cleared = zd === zc.length;
           return (
-            <details className="zone" key={z} open={zi === 0}>
+            <details
+              className="zone"
+              key={z}
+              open={!!openZones[z]}
+              onToggle={(e) =>
+                setOpenZones((o) => ({
+                  ...o,
+                  [z]: (e.currentTarget as HTMLDetailsElement).open,
+                }))
+              }
+            >
               <summary>
                 <span className="zone-ico">{zc[0].ico}</span>
                 <span className="zone-title">{`Zone ${zi + 1} — ${z}`}</span>

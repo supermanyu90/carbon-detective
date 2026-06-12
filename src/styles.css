@@ -167,6 +167,25 @@ details[open] .chev{transform:rotate(90deg)}
 }
 .stepper button:hover{background:var(--manila)}
 .stepper .val{font-family:var(--mono);min-width:2.2em;text-align:center;font-size:1rem}
+input.val{
+  width:2.6em;border:none;background:transparent;color:var(--ink);padding:0;
+  -moz-appearance:textfield;appearance:textfield;
+}
+input.val::-webkit-outer-spin-button,input.val::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input.val::placeholder{color:var(--ink-soft);opacity:.7}
+
+/* ============ GUIDE ROW (next-unanswered / mark-remaining) ============ */
+.guide-row{display:flex;gap:10px;flex-wrap:wrap;margin:-4px 0 14px}
+.ghost-btn{
+  font-family:var(--mono);font-size:.85rem;color:var(--ink);
+  background:#fffdf6;border:1.5px dashed var(--ink);border-radius:999px;
+  padding:.45em 1em;cursor:pointer;display:inline-flex;align-items:center;gap:.5em;
+}
+.ghost-btn:hover{background:var(--manila)}
+.ghost-count{
+  font-weight:700;background:var(--stamp);color:#fff;border-radius:999px;
+  min-width:1.6em;text-align:center;padding:.05em .45em;font-size:.78rem;
+}
 .found-note{font-family:var(--mono);font-size:.8rem;color:var(--stamp);margin-top:6px;display:none}
 .clue.found .found-note{display:block}
 
@@ -190,6 +209,17 @@ details[open] .chev{transform:rotate(90deg)}
 
 .equiv{background:var(--ink);color:var(--paper);border-radius:var(--radius);padding:16px 18px;margin:18px 0;font-size:.98rem}
 .equiv strong{color:#fff}
+
+/* ============ COMPARISON BANNER (vs. last audit) ============ */
+.compare{
+  border:1.5px solid var(--ink);border-left-width:6px;border-radius:8px;
+  padding:12px 14px;margin:14px 0;font-size:.96rem;background:#fffdf6;
+}
+.compare.better{border-left-color:var(--evidence)}
+.compare.worse{border-left-color:var(--stamp)}
+.compare.flat{border-left-color:var(--ink-soft)}
+
+.case-file-note{border-top:1px dashed var(--line);padding-top:12px}
 
 table.method{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:10px}
 table.method th,table.method td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}

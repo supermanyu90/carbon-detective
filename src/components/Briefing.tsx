@@ -1,14 +1,18 @@
 import type { Mode } from "../core/clues";
+import { fmt } from "../core/audit";
+import type { ReportSnapshot } from "../lib/storage";
 
 interface Props {
   mode: Mode;
   detName: string;
+  history: ReportSnapshot[];
   onSetMode: (m: Mode) => void;
   onSetName: (name: string) => void;
   onStart: () => void;
 }
 
-export function Briefing({ mode, detName, onSetMode, onSetName, onStart }: Props) {
+export function Briefing({ mode, detName, history, onSetMode, onSetName, onStart }: Props) {
+  const last = history.length ? history[history.length - 1] : null;
   return (
     <div className="card">
       <h2>Case briefing</h2>
@@ -58,6 +62,18 @@ export function Briefing({ mode, detName, onSetMode, onSetName, onStart }: Props
           🔍 Begin investigation
         </button>
       </div>
+      {last && (
+        <p className="hint case-file-note" style={{ marginTop: 14 }}>
+          🗂️ {history.length} case{history.length === 1 ? "" : "s"} on file. Last:{" "}
+          <strong>{last.verdict}</strong> · {fmt(last.co2)} kg CO₂ ·{" "}
+          {new Date(last.at).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}
+          . Re-run the same scene to track whether your fixes stuck.
+        </p>
+      )}
     </div>
   );
 }
