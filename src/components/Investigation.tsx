@@ -8,6 +8,7 @@ import {
   fmt,
   type Answers,
 } from "../core/audit";
+import { SceneMap, type Room } from "./SceneMap";
 
 interface Props {
   mode: Mode;
@@ -167,10 +168,26 @@ export function Investigation({
   const remaining = clues.length - done;
   const firstUnanswered = clues.find((c) => !answers[c.id]?.answered);
 
+  const rooms: Room[] = zones.map((z) => {
+    const zc = clues.filter((c) => c.zone === z);
+    return {
+      zone: z,
+      ico: zc[0].ico,
+      total: zc.length,
+      done: zc.filter((c) => answers[c.id]?.answered).length,
+      found: zc.filter((c) => answers[c.id]?.found).length,
+    };
+  });
+
   const jumpToNext = () => {
     if (!firstUnanswered) return;
     setOpenZones((o) => ({ ...o, [firstUnanswered.zone]: true }));
-    setScrollTarget(firstUnanswered.id);
+    setScrollTarget(`clue-${firstUnanswered.id}`);
+  };
+
+  const pickRoom = (i: number) => {
+    setOpenZones((o) => ({ ...o, [zones[i]]: true }));
+    setScrollTarget(`zone-${i}`);
   };
 
   const markRemaining = () => {
@@ -182,19 +199,23 @@ export function Investigation({
     }
   };
 
-  // After a "jump", open the zone (state) then scroll/focus the clue.
+  // After opening a zone/clue (state), scroll to it and move focus.
   useEffect(() => {
     if (!scrollTarget) return;
-    const el = document.getElementById(`clue-${scrollTarget}`);
+    const el = document.getElementById(scrollTarget);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.focus({ preventScroll: true });
+      const isZone = scrollTarget.startsWith("zone-");
+      el.scrollIntoView({ behavior: "smooth", block: isZone ? "start" : "center" });
+      if (isZone) el.querySelector<HTMLElement>("summary")?.focus({ preventScroll: true });
+      else el.focus({ preventScroll: true });
     }
     setScrollTarget(null);
   }, [scrollTarget]);
 
   return (
     <>
+      <SceneMap mode={mode} rooms={rooms} flashlight={flashlight} onPick={pickRoom} />
+
       <div className="progress-bar">
         <span className="mono">{`${done} of ${clues.length} clues examined`}</span>
         <div className="meter" aria-hidden="true">
@@ -231,6 +252,7 @@ export function Investigation({
           return (
             <details
               className="zone"
+              id={`zone-${zi}`}
               key={z}
               open={!!openZones[z]}
               onToggle={(e) => {

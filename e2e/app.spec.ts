@@ -58,6 +58,13 @@ test("classroom case has four zones", async ({ page }) => {
   await expect(page.locator("details.zone")).toHaveCount(4);
 });
 
+test("scene map shows rooms and opens a zone when picked", async ({ page }) => {
+  await beginHome(page);
+  await expect(page.locator(".scene .room")).toHaveCount(5);
+  await page.locator(".scene .room").nth(2).click();
+  await expect(page.locator("#zone-2")).toHaveJSProperty("open", true);
+});
+
 test("count clue accepts a typed value and logs evidence", async ({ page }) => {
   await beginHome(page);
   const input = page.locator("input.val").first();
