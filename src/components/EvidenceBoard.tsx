@@ -1,23 +1,64 @@
-import type { CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { fmt, type Finding } from "../core/audit";
 
+interface Line {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
 /** The prime suspects rendered as a detective's corkboard: pinned index cards
- *  with red string running back to the verdict. Decorative string positions are
- *  approximate (evenly-spaced cards), so no DOM measurement is needed. */
+ *  with red string running back to the verdict. The string is measured from the
+ *  actual pin positions (via ResizeObserver), so it stays connected whether the
+ *  cards sit in a row or stack on a narrow screen. */
 export function EvidenceBoard({ suspects, verdict }: { suspects: Finding[]; verdict: string }) {
   const n = suspects.length;
-  const xs = n === 1 ? [50] : n === 2 ? [27, 73] : [16, 50, 84];
+  const boardRef = useRef<HTMLDivElement>(null);
+  const verdictPinRef = useRef<HTMLSpanElement>(null);
+  const cardPinRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const [lines, setLines] = useState<Line[]>([]);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+
+  useLayoutEffect(() => {
+    const board = boardRef.current;
+    const vpin = verdictPinRef.current;
+    if (!board || !vpin) return;
+
+    const center = (el: Element, br: DOMRect) => {
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - br.left, y: r.top + r.height / 2 - br.top };
+    };
+    const measure = () => {
+      const br = board.getBoundingClientRect();
+      const start = center(vpin, br);
+      setSize({ w: br.width, h: br.height });
+      setLines(
+        cardPinRefs.current
+          .filter((p): p is HTMLSpanElement => !!p)
+          .map((pin) => {
+            const c = center(pin, br);
+            return { x1: start.x, y1: start.y, x2: c.x, y2: c.y };
+          }),
+      );
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(board);
+    return () => ro.disconnect();
+  }, [suspects]);
 
   return (
-    <div className="evidence-board" role="group" aria-label="Prime suspects evidence board">
-      <svg className="board-string" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        {xs.map((x, i) => (
-          <line key={i} x1="50" y1="11" x2={x} y2="48" />
+    <div className="evidence-board" ref={boardRef} role="group" aria-label="Prime suspects evidence board">
+      <svg className="board-string" viewBox={`0 0 ${size.w} ${size.h}`} aria-hidden="true">
+        {lines.map((l, i) => (
+          <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
         ))}
       </svg>
 
       <div className="board-verdict">
-        <span className="pin" aria-hidden="true" />
+        <span className="pin" ref={verdictPinRef} aria-hidden="true" />
         Verdict: {verdict}
       </div>
 
@@ -28,7 +69,13 @@ export function EvidenceBoard({ suspects, verdict }: { suspects: Finding[]; verd
             key={f.c.id}
             style={{ "--rot": `${(i - (n - 1) / 2) * 2.4}deg` } as CSSProperties}
           >
-            <span className="pin" aria-hidden="true" />
+            <span
+              className="pin"
+              ref={(el) => {
+                cardPinRefs.current[i] = el;
+              }}
+              aria-hidden="true"
+            />
             <p className="card-rank">Suspect #{i + 1}</p>
             <p className="card-title">
               {f.c.ico} {f.c.q}
