@@ -118,6 +118,28 @@ test("AI analyst writes a plan, degrading to the on-device brief without a backe
   await expect(analyst.locator(".ai-output")).toHaveAttribute("aria-live", "polite");
 });
 
+test("shares the verdict via intent links and copy-to-clipboard", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await beginHome(page);
+  await completeAudit(page);
+
+  const share = page.locator(".share-bar");
+  await expect(share).toBeVisible();
+
+  // Network targets carry the prefilled, encoded message.
+  const x = share.getByRole("link", { name: /Twitter/ });
+  await expect(x).toHaveAttribute("href", /twitter\.com\/intent\/tweet\?text=/);
+  await expect(x).toHaveAttribute("href", /Carbon%20Detective/);
+  await expect(share.getByRole("link", { name: /WhatsApp/ })).toHaveAttribute("href", /wa\.me/);
+
+  // Copy-to-clipboard writes the message + link and confirms via the live region.
+  await share.getByRole("button", { name: /Copy link/ }).click();
+  await expect(share.getByRole("button", { name: /Link copied/ })).toBeVisible();
+  const clip = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clip).toMatch(/Carbon Detective audit/);
+  expect(clip).toContain("http");
+});
+
 test("shows the climate context linking carbon to anomalies", async ({ page }) => {
   await beginHome(page);
   await completeAudit(page);

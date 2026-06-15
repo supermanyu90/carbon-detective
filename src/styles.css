@@ -506,3 +506,9 @@ details.zone summary:hover .zone-ico{display:inline-block;animation:wiggle .5s e
 .climate-link-body { margin: 0 0 6px; line-height: 1.55; }
 .climate-link-src { font: 600 0.8rem var(--mono); color: var(--tag-blue); }
 .climate-caveat { margin-top: 14px; }
+
+/* =================== Share bar =================== */
+.share-bar { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.share-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.share-actions .btn { text-decoration: none; }
+.share-status { min-height: 1.2em; margin: 8px 0 0; color: var(--low); }
