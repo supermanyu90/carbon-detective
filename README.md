@@ -8,6 +8,31 @@ working" ledger.
 Originally a single 1,036-line HTML file; rebuilt here as a **Vite + React + TypeScript**
 application with the carbon math extracted into a pure, unit-tested core.
 
+## AI Case Analyst (Claude)
+
+After an audit closes, the **AI Case Analyst** turns the structured findings into a
+personalised, prioritised action plan — streamed in live. It is powered by **Claude
+(`claude-opus-4-8`)** through a serverless proxy (`api/analyze.ts`), and is designed to
+the following guarantees:
+
+- **Key stays server-side.** The `ANTHROPIC_API_KEY` lives only in the serverless
+  function's environment. The Anthropic SDK is never bundled into the browser (verified in
+  CI by inspecting `dist/`).
+- **No PII leaves the device.** Only anonymous, already-computed audit numbers and the
+  clue ids the user saw are sent — never the detective's name, case number, or timestamps.
+  The boundary is enforced in one place (`src/core/aiBrief.ts`) and unit-tested.
+- **Untrusted input is validated and bounded** server-side (`parseAnalystRequest`) — types,
+  string lengths, numeric ranges, and finding count are all capped.
+- **Graceful degradation.** With no key (or on any network/rate-limit error) the app falls
+  back to a deterministic **on-device brief**, so the static SPA has *no hard backend
+  dependency* and works fully offline. This path is covered by an e2e test.
+- **Responsible-AI disclosure.** The panel labels output as AI-generated, repeats that all
+  figures are typical annual estimates (not advice), and the system prompt forbids invented
+  figures or fabricated sources.
+
+Set `ANTHROPIC_API_KEY` in your serverless host (see `.env.example`); `vercel.json` ships a
+strict Content-Security-Policy and security headers. Without a key, everything else runs.
+
 ## Quick start
 
 ```bash

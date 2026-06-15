@@ -452,3 +452,34 @@ details.zone summary:hover .zone-ico{display:inline-block;animation:wiggle .5s e
   .card{box-shadow:none;border-color:#888;page-break-inside:avoid}
   header.case-head{box-shadow:none}
 }
+
+/* =================== AI Case Analyst =================== */
+.ai-analyst { border: 1px dashed var(--line); }
+.ai-analyst-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.ai-badge {
+  font: 600 0.7rem/1 var(--mono);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 4px 8px; border-radius: 999px; white-space: nowrap;
+}
+.ai-badge.ai { background: var(--tag-blue); color: #fff; }
+.ai-badge.local { background: var(--manila-deep); color: var(--ink); }
+.ai-output {
+  margin: 10px 0 0; line-height: 1.6;
+  white-space: pre-wrap;
+}
+.ai-output.streaming::after {
+  content: "▍"; color: var(--tag-blue);
+  animation: ai-caret 1s steps(2) infinite;
+}
+@keyframes ai-caret { 50% { opacity: 0; } }
+.ai-analyst-foot {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-top: 12px;
+}
+.ai-disclaimer { margin: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .ai-output.streaming::after { animation: none; }
+}

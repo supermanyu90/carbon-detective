@@ -12,6 +12,7 @@ import {
 import { CountUp } from "./CountUp";
 import { Equivalences } from "./Equivalences";
 import { EvidenceBoard } from "./EvidenceBoard";
+import { AiAnalyst } from "./AiAnalyst";
 import type { ReportSnapshot } from "../lib/storage";
 
 interface Props {
@@ -145,6 +146,14 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
       {tot.co2 > 0 && (
         <Equivalences co2={tot.co2} water={tot.water} reduceMotion={reduceMotion} />
       )}
+
+      <AiAnalyst
+        mode={mode}
+        verdict={v.s}
+        totals={tot}
+        found={found}
+        reduceMotion={reduceMotion}
+      />
 
       {nFound > 0 && (
         <>

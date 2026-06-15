@@ -100,6 +100,24 @@ test("generates an accessible audit report", async ({ page }) => {
   expect(await method.locator("th[scope='col']").count()).toBeGreaterThanOrEqual(3);
 });
 
+test("AI analyst writes a plan, degrading to the on-device brief without a backend", async ({
+  page,
+}) => {
+  await beginHome(page);
+  await completeAudit(page);
+
+  const analyst = page.locator(".ai-analyst");
+  await expect(analyst).toBeVisible();
+  await analyst.getByRole("button", { name: /Write my action plan/ }).click();
+
+  // No /api/analyze in the preview server → graceful fallback to the local brief.
+  await expect(analyst.locator(".ai-badge")).toHaveText(/On-device brief/);
+  await expect(analyst.locator(".ai-output")).not.toBeEmpty();
+  await expect(analyst.getByRole("button", { name: /Regenerate/ })).toBeVisible();
+  // Output is announced to assistive tech.
+  await expect(analyst.locator(".ai-output")).toHaveAttribute("aria-live", "polite");
+});
+
 test("persists the case across a reload", async ({ page }) => {
   await beginHome(page);
   await completeAudit(page);
