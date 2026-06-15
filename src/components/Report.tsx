@@ -13,6 +13,7 @@ import { CountUp } from "./CountUp";
 import { Equivalences } from "./Equivalences";
 import { EvidenceBoard } from "./EvidenceBoard";
 import { AiAnalyst } from "./AiAnalyst";
+import { ClimateContext } from "./ClimateContext";
 import type { ReportSnapshot } from "../lib/storage";
 
 interface Props {
@@ -154,6 +155,8 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
         found={found}
         reduceMotion={reduceMotion}
       />
+
+      <ClimateContext co2={tot.co2} />
 
       {nFound > 0 && (
         <>

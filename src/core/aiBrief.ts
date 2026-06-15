@@ -17,6 +17,7 @@
    ========================================================= */
 import type { Mode } from "./clues";
 import type { Finding, Impact, Severity } from "./audit";
+import { CLIMATE_PRIMER } from "./climate";
 
 /** The maximum number of findings we forward. Bounds payload size
  *  (cost, latency, abuse surface) regardless of client input. */
@@ -137,6 +138,10 @@ export const SYSTEM_PROMPT = [
   "  say so plainly once. Do not provide financial, legal, or safety guarantees.",
   "- Be warm, concise, and concrete. No preamble, no headings, no markdown. 110 words max.",
   "- Currency is Indian rupees (₹). Write for a general reader; avoid jargon.",
+  "- You may add ONE short sentence connecting the biggest finding to a climate anomaly",
+  "  (heatwaves, monsoon swings, an El Niño year) using the primer below — only if accurate.",
+  "",
+  CLIMATE_PRIMER,
 ].join("\n");
 
 /** The user-turn text. Deterministic given the request (good for caching/tests). */

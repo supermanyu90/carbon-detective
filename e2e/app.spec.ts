@@ -118,6 +118,19 @@ test("AI analyst writes a plan, degrading to the on-device brief without a backe
   await expect(analyst.locator(".ai-output")).toHaveAttribute("aria-live", "polite");
 });
 
+test("shows the climate context linking carbon to anomalies", async ({ page }) => {
+  await beginHome(page);
+  await completeAudit(page);
+
+  const climate = page.locator(".climate");
+  await expect(climate).toBeVisible();
+  await expect(climate.getByRole("heading", { name: /From your meter to the monsoon/ })).toBeVisible();
+  // The four mechanism cards (ENSO, monsoon, heat, ocean).
+  await expect(climate.locator(".climate-links li")).toHaveCount(4);
+  await expect(climate).toContainText(/El Niño/);
+  await expect(climate).toContainText(/still trapping heat a century/);
+});
+
 test("persists the case across a reload", async ({ page }) => {
   await beginHome(page);
   await completeAudit(page);

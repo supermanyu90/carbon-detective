@@ -483,3 +483,26 @@ details.zone summary:hover .zone-ico{display:inline-block;animation:wiggle .5s e
 @media (prefers-reduced-motion: reduce) {
   .ai-output.streaming::after { animation: none; }
 }
+
+/* =================== Climate context =================== */
+.climate { border-left: 4px solid var(--tag-blue); }
+.climate-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px; margin: 14px 0;
+}
+.climate-stat {
+  background: var(--manila); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 12px 14px;
+}
+.climate-stat .num {
+  display: block; font: 700 1.5rem/1.1 var(--display); color: var(--tag-blue);
+}
+.climate-stat .lbl {
+  display: block; margin-top: 4px; font-size: 0.85rem; color: var(--ink-soft);
+}
+.climate-links { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 14px; }
+.climate-links li { border-top: 1px dashed var(--line); padding-top: 12px; }
+.climate-link-title { margin: 0 0 4px; font-weight: 700; }
+.climate-link-body { margin: 0 0 6px; line-height: 1.55; }
+.climate-link-src { font: 600 0.8rem var(--mono); color: var(--tag-blue); }
+.climate-caveat { margin-top: 14px; }
