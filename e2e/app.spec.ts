@@ -138,6 +138,12 @@ test("shares the verdict via intent links and copy-to-clipboard", async ({ page,
   const clip = await page.evaluate(() => navigator.clipboard.readText());
   expect(clip).toMatch(/Carbon Detective audit/);
   expect(clip).toContain("http");
+
+  // Image card: no native file-share in headless → falls back to a PNG download.
+  const download = page.waitForEvent("download");
+  await share.getByRole("button", { name: /Share image card/ }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(/^carbon-detective-home-\d[\d,]*kg\.png$/);
 });
 
 test("shows the climate context linking carbon to anomalies", async ({ page }) => {

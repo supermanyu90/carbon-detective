@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Mode } from "../core/clues";
 import { buildShareText, shareTargets, type ShareData } from "../core/share";
+import { shareCaseCard } from "../lib/canvasShare";
 
 interface Props {
   mode: Mode;
@@ -18,6 +19,7 @@ interface Props {
 export function ShareBar(props: Props) {
   const [copied, setCopied] = useState(false);
   const [shareError, setShareError] = useState(false);
+  const [imageStatus, setImageStatus] = useState<"" | "working" | "downloaded">("");
 
   const data: ShareData = props;
   const text = buildShareText(data);
@@ -50,6 +52,14 @@ export function ShareBar(props: Props) {
     } catch {
       setShareError(true);
     }
+  };
+
+  const shareImage = async () => {
+    setShareError(false);
+    setImageStatus("working");
+    const result = await shareCaseCard(data, text);
+    setImageStatus(result === "downloaded" ? "downloaded" : "");
+    if (result === "failed") setShareError(true);
   };
 
   const open = (href: string) => (e: React.MouseEvent) => {
@@ -85,10 +95,14 @@ export function ShareBar(props: Props) {
         <button className="btn secondary" onClick={copy}>
           {copied ? "✓ Link copied" : "🔗 Copy link"}
         </button>
+        <button className="btn secondary" onClick={shareImage} disabled={imageStatus === "working"}>
+          {imageStatus === "working" ? "Generating…" : "🖼️ Share image card"}
+        </button>
       </div>
 
       <p className="hint share-status" role="status" aria-live="polite">
         {copied ? "Share text and link copied to your clipboard." : ""}
+        {imageStatus === "downloaded" ? "Case-card image saved to your downloads." : ""}
         {shareError ? "Couldn’t share automatically — copy the link and paste it anywhere." : ""}
       </p>
     </section>
