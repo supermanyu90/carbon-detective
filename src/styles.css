@@ -466,3 +466,63 @@ details.zone summary:hover .zone-ico{display:inline-block;animation:wiggle .5s e
   .card{box-shadow:none;border-color:#888;page-break-inside:avoid}
   header.case-head{box-shadow:none}
 }
+
+/* =================== AI Case Analyst =================== */
+.ai-analyst { border: 1px dashed var(--line); }
+.ai-analyst-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.ai-badge {
+  font: 600 0.7rem/1 var(--mono);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 4px 8px; border-radius: 999px; white-space: nowrap;
+}
+.ai-badge.ai { background: var(--tag-blue); color: #fff; }
+.ai-badge.local { background: var(--manila-deep); color: var(--ink); }
+.ai-output {
+  margin: 10px 0 0; line-height: 1.6;
+  white-space: pre-wrap;
+}
+.ai-output.streaming::after {
+  content: "▍"; color: var(--tag-blue);
+  animation: ai-caret 1s steps(2) infinite;
+}
+@keyframes ai-caret { 50% { opacity: 0; } }
+.ai-analyst-foot {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-top: 12px;
+}
+.ai-disclaimer { margin: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .ai-output.streaming::after { animation: none; }
+}
+
+/* =================== Climate context =================== */
+.climate { border-left: 4px solid var(--tag-blue); }
+.climate-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px; margin: 14px 0;
+}
+.climate-stat {
+  background: var(--manila); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 12px 14px;
+}
+.climate-stat .num {
+  display: block; font: 700 1.5rem/1.1 var(--display); color: var(--tag-blue);
+}
+.climate-stat .lbl {
+  display: block; margin-top: 4px; font-size: 0.85rem; color: var(--ink-soft);
+}
+.climate-links { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 14px; }
+.climate-links li { border-top: 1px dashed var(--line); padding-top: 12px; }
+.climate-link-title { margin: 0 0 4px; font-weight: 700; }
+.climate-link-body { margin: 0 0 6px; line-height: 1.55; }
+.climate-link-src { font: 600 0.8rem var(--mono); color: var(--tag-blue); }
+.climate-caveat { margin-top: 14px; }
+
+/* =================== Share bar =================== */
+.share-bar { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.share-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.share-actions .btn { text-decoration: none; }
+.share-status { min-height: 1.2em; margin: 8px 0 0; color: var(--low); }

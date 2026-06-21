@@ -5,6 +5,9 @@ import { fmt, formatDateLong, formatDateShort } from "../lib/format";
 import { CountUp } from "./CountUp";
 import { Equivalences } from "./Equivalences";
 import { EvidenceBoard } from "./EvidenceBoard";
+import { AiAnalyst } from "./AiAnalyst";
+import { ClimateContext } from "./ClimateContext";
+import { ShareBar } from "./ShareBar";
 import type { ReportSnapshot } from "../lib/storage";
 
 interface Props {
@@ -131,6 +134,26 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
       </div>
 
       {tot.co2 > 0 && <Equivalences impact={tot} reduceMotion={reduceMotion} />}
+
+      <AiAnalyst
+        mode={mode}
+        verdict={v.label}
+        totals={tot}
+        found={found}
+        reduceMotion={reduceMotion}
+      />
+
+      <ClimateContext co2={tot.co2} />
+
+      <ShareBar
+        mode={mode}
+        co2={tot.co2}
+        cost={tot.cost}
+        verdict={v.label}
+        rank={detRank}
+        nFound={nFound}
+        nClues={nClues}
+      />
 
       {nFound > 0 && (
         <>

@@ -14,9 +14,11 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
-      // Measure the unit-testable logic layer. UI components are exercised by
-      // the Playwright e2e suite, which v8 unit coverage does not instrument.
+      // Measure the unit-testable logic layer. UI components and browser-only
+      // glue (canvas / Web Share) are exercised by the Playwright e2e suite,
+      // which v8 unit coverage does not instrument.
       include: ["src/core/**", "src/lib/**"],
+      exclude: ["src/lib/canvasShare.ts"],
       thresholds: {
         lines: 95,
         functions: 95,

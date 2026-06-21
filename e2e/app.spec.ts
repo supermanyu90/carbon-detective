@@ -107,6 +107,73 @@ test("generates an accessible audit report", async ({ page }) => {
   expect(await method.locator("th[scope='col']").count()).toBeGreaterThanOrEqual(3);
 });
 
+test("AI analyst writes a plan, degrading to the on-device brief without a backend", async ({
+  page,
+}) => {
+  await beginHome(page);
+  await completeAudit(page);
+
+  const analyst = page.locator(".ai-analyst");
+  await expect(analyst).toBeVisible();
+  await analyst.getByRole("button", { name: /Write my action plan/ }).click();
+
+  // No /api/analyze in the preview server → graceful fallback to the local brief.
+  await expect(analyst.locator(".ai-badge")).toHaveText(/On-device brief/);
+  await expect(analyst.locator(".ai-output")).not.toBeEmpty();
+  await expect(analyst.getByRole("button", { name: /Regenerate/ })).toBeVisible();
+  // Output is announced to assistive tech.
+  await expect(analyst.locator(".ai-output")).toHaveAttribute("aria-live", "polite");
+});
+
+test("shares the verdict via intent links and copy-to-clipboard", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await beginHome(page);
+  await completeAudit(page);
+
+  const share = page.locator(".share-bar");
+  await expect(share).toBeVisible();
+
+  // Network targets carry the prefilled, encoded message.
+  const x = share.getByRole("link", { name: /Twitter/ });
+  await expect(x).toHaveAttribute("href", /twitter\.com\/intent\/tweet\?text=/);
+  await expect(x).toHaveAttribute("href", /Carbon%20Detective/);
+  await expect(share.getByRole("link", { name: /WhatsApp/ })).toHaveAttribute(
+    "href",
+    /wa\.me/,
+  );
+
+  // Copy-to-clipboard writes the message + link and confirms via the live region.
+  await share.getByRole("button", { name: /Copy link/ }).click();
+  await expect(share.getByRole("button", { name: /Link copied/ })).toBeVisible();
+  const clip = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clip).toMatch(/Carbon Detective audit/);
+  expect(clip).toContain("http");
+
+  // Image card: no native file-share in headless → falls back to a PNG download.
+  const download = page.waitForEvent("download");
+  await share.getByRole("button", { name: /Share image card/ }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(/^carbon-detective-home-\d[\d,]*kg\.png$/);
+});
+
+test("shows the climate context linking carbon to anomalies", async ({ page }) => {
+  await beginHome(page);
+  await completeAudit(page);
+
+  const climate = page.locator(".climate");
+  await expect(climate).toBeVisible();
+  await expect(
+    climate.getByRole("heading", { name: /From your meter to the monsoon/ }),
+  ).toBeVisible();
+  // The four mechanism cards (ENSO, monsoon, heat, ocean).
+  await expect(climate.locator(".climate-links li")).toHaveCount(4);
+  await expect(climate).toContainText(/El Niño/);
+  await expect(climate).toContainText(/still trapping heat a century/);
+});
+
 test("persists the case across a reload", async ({ page }) => {
   await beginHome(page);
   await completeAudit(page);
