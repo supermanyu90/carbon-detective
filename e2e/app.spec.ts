@@ -1,4 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
 async function beginHome(page: Page) {
   await page.goto("/");
@@ -26,7 +29,9 @@ test("loads the briefing with the Field Manual and cited sources", async ({ page
   await page.getByText(/Sources & methodology/).click();
   const links = page.locator(".sources a");
   await expect(links).toHaveCount(7);
-  const hrefs = await links.evaluateAll((els) => els.map((e) => (e as HTMLAnchorElement).href));
+  const hrefs = await links.evaluateAll((els) =>
+    els.map((e) => (e as HTMLAnchorElement).href),
+  );
   expect(
     hrefs.every((h) =>
       /cea\.nic\.in|beeindia|ipcc|epa\.gov|iea\.org|ghgprotocol|gov\.uk/.test(h),
@@ -48,7 +53,9 @@ test("toggles scene mode with aria-pressed", async ({ page }) => {
 test("begins a home investigation with five zones", async ({ page }) => {
   await beginHome(page);
   await expect(page.locator("details.zone")).toHaveCount(5);
-  await expect(page.locator('[role="tab"][aria-selected="true"]')).toContainText("Investigation");
+  await expect(page.locator('[role="tab"][aria-selected="true"]')).toContainText(
+    "Investigation",
+  );
 });
 
 test("classroom case has four zones", async ({ page }) => {
@@ -128,4 +135,45 @@ test("runs a full flow with no console or page errors", async ({ page }) => {
   await expect(page.locator(".stat-grid")).toBeVisible();
 
   expect(errors, errors.join("\n")).toEqual([]);
+});
+
+// Audit in reduced-motion mode: this both verifies the motion-safe experience
+// and removes the purely decorative cursor flashlight (mix-blend-mode) and
+// confetti overlays, whose composited pixels otherwise skew axe's contrast
+// sampling away from the real text/background colors.
+test("briefing has no WCAG A/AA violations (axe)", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "The Carbon Detective" })).toBeVisible();
+  const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});
+
+test("the audit report has no WCAG A/AA violations (axe)", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await beginHome(page);
+  await completeAudit(page);
+  const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});
+
+test("exports the filed case as a downloadable JSON file", async ({ page }) => {
+  await beginHome(page);
+  await completeAudit(page);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: /Download case file/ }).click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(
+    /^carbon-detective-home-\d{4}-\d{2}-\d{2}\.json$/,
+  );
+});
+
+test("a keyboard skip link jumps to the main content", async ({ page }) => {
+  await page.goto("/");
+  await page.keyboard.press("Tab");
+  const skip = page.getByRole("link", { name: /Skip to main content/ });
+  await expect(skip).toBeFocused();
+  await skip.click();
+  await expect(page.locator("#main")).toBeFocused();
 });

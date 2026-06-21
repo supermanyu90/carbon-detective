@@ -7,12 +7,15 @@ import {
   totals,
   verdict,
   zonesForMode,
+  clampCount,
   type Answer,
   type Answers,
 } from "./core/audit";
 import { CLUES } from "./core/clues";
 import { usePrefersReducedMotion, useFinePointer } from "./hooks/useMediaQuery";
 import { useAssistantStore } from "./hooks/useAssistant";
+import { formatDateShort } from "./lib/format";
+import { caseFileJson, caseFileName } from "./lib/caseFile";
 import { throwConfetti } from "./lib/confetti";
 import {
   loadHistory,
@@ -25,6 +28,7 @@ import {
 } from "./lib/storage";
 import { Briefing } from "./components/Briefing";
 import { FieldManual } from "./components/FieldManual";
+import { ResponsibleNote } from "./components/ResponsibleNote";
 import { Investigation } from "./components/Investigation";
 import { Report } from "./components/Report";
 import { InspectorHoot } from "./components/InspectorHoot";
@@ -41,7 +45,6 @@ const MOD_LINES = [
   "Good eye, detective.",
 ];
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-const clamp = (n: number) => Math.max(0, Math.min(99, n));
 
 const STEP_TABS = ["1 · Briefing", "2 · Investigation", "3 · Audit Report"];
 const DEFAULT_CASE_NO = "CASE No. CD-0000 · OPENED TODAY";
@@ -175,9 +178,7 @@ export default function App() {
     answersRef.current = {};
     clearedZones.current = new Set();
     const caseNum = "CD-" + String(Math.floor(1000 + Math.random() * 9000));
-    const today = new Date()
-      .toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-      .toUpperCase();
+    const today = formatDateShort(new Date()).toUpperCase();
     setCaseNo(`CASE No. ${caseNum} · OPENED ${today}`);
     setStampText("Under Investigation");
     setInvestigationUnlocked(true);
@@ -212,7 +213,11 @@ export default function App() {
       if (zc.every((c) => next[c.id]?.answered) && !clearedZones.current.has(z)) {
         clearedZones.current.add(z);
         if (clues.every((c) => next[c.id]?.answered))
-          say("Every clue examined. Close the case when you’re ready, chief.", "excited", true);
+          say(
+            "Every clue examined. Close the case when you’re ready, chief.",
+            "excited",
+            true,
+          );
         else say(`${z} — cleared. Onward.`, "excited");
       }
     }
@@ -231,7 +236,7 @@ export default function App() {
     applyAnswer(id, { answered: true, found: n > 0, n });
   const stepCount = (id: string, delta: number) => {
     const cur = answersRef.current[id]?.n ?? 0;
-    setCount(id, clamp(cur + delta));
+    setCount(id, clampCount(cur + delta));
   };
 
   /* ---- Report ---- */
@@ -255,7 +260,7 @@ export default function App() {
       fuel: t.fuel,
       nFound,
       nClues,
-      verdict: verdict(nFound / nClues).s,
+      verdict: verdict(nFound / nClues).label,
     };
     setPreviousSnapshot(previousOf(history, mode, caseNo));
     const nextHistory = upsertHistory(history, snap);
@@ -290,10 +295,28 @@ export default function App() {
     say("Fresh case file. Where shall we look this time?", "excited", true);
   };
 
+  /* ---- Export the filed case as a portable JSON file (stays on-device) ---- */
+  const downloadCaseFile = () => {
+    const input = { mode, answers, detName, filedAt };
+    const blob = new Blob([caseFileJson(input)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = caseFileName(input);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    say("Case file exported. It’s yours — nothing left my desk.", "excited");
+  };
+
   const tabEnabled = [true, investigationUnlocked, reportUnlocked];
 
   return (
     <>
+      <a className="skip-link" href="#main">
+        Skip to main content
+      </a>
       <div className="wrap">
         <header className="case-head">
           <div className="case-row">
@@ -307,9 +330,10 @@ export default function App() {
             </div>
           </div>
           <p className="lede">
-            Somewhere in this building, energy and water are quietly going to waste — and the carbon
-            adds up. Your job: sweep each zone, log the evidence, and close the case with a full
-            audit report and savings estimate. No experience needed. Reading glasses welcome.
+            Somewhere in this building, energy and water are quietly going to waste — and the
+            carbon adds up. Your job: sweep each zone, log the evidence, and close the case
+            with a full audit report and savings estimate. No experience needed. Reading
+            glasses welcome.
           </p>
         </header>
 
@@ -329,7 +353,7 @@ export default function App() {
           ))}
         </nav>
 
-        <section ref={sectionRef} tabIndex={-1} aria-label={STEP_TABS[step]}>
+        <main id="main" ref={sectionRef} tabIndex={-1} aria-label={STEP_TABS[step]}>
           {step === 0 && (
             <>
               <Briefing
@@ -341,6 +365,7 @@ export default function App() {
                 onStart={startInvestigation}
               />
               <FieldManual />
+              <ResponsibleNote />
             </>
           )}
           {step === 1 && (
@@ -369,6 +394,9 @@ export default function App() {
                 <button className="btn" onClick={() => window.print()}>
                   🖨️ Print / save as PDF
                 </button>
+                <button className="btn secondary" onClick={downloadCaseFile}>
+                  ⬇️ Download case file (.json)
+                </button>
                 <button className="btn secondary" onClick={() => setStep(1)}>
                   ← Re-examine clues
                 </button>
@@ -378,7 +406,7 @@ export default function App() {
               </div>
             </>
           )}
-        </section>
+        </main>
       </div>
 
       <Spotlight enabled={finePointer && !reduceMotion} />

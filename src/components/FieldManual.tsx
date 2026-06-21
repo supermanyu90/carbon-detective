@@ -57,50 +57,54 @@ export function FieldManual() {
     <section className="card manual" aria-labelledby="manualHead">
       <h2 id="manualHead">📖 How to use it — Field Manual</h2>
       <p className="hint">
-        A carbon audit in six steps. No experience needed — the app does the maths and shows its
-        working.
+        A carbon audit in six steps. No experience needed — the app does the maths and shows
+        its working.
       </p>
 
       <ol className="manual-steps">
         <li>
           <strong>Pick your scene.</strong> Choose the <em>Home</em> or{" "}
-          <em>Classroom / Office</em> case above. Each has its own zones and clues. Add a detective
-          name if you like.
+          <em>Classroom / Office</em> case above. Each has its own zones and clues. Add a
+          detective name if you like.
         </li>
         <li>
-          <strong>Sweep each zone.</strong> Open a zone and work through its clues. For every clue,
-          answer <em>Yes&nbsp;🔎</em> (you found waste — a lead to chase) or <em>No&nbsp;✓</em> (all
-          clear), or type a <em>count</em> for things like dripping taps or standby devices.{" "}
+          <strong>Sweep each zone.</strong> Open a zone and work through its clues. For every
+          clue, answer <em>Yes&nbsp;🔎</em> (you found waste — a lead to chase) or{" "}
+          <em>No&nbsp;✓</em> (all clear), or type a <em>count</em> for things like dripping
+          taps or standby devices.{" "}
           <em>Tip: actually walk over and check — that&rsquo;s what real auditors do.</em>
         </li>
         <li>
           <strong>Read the impact badges.</strong> Each clue is tagged{" "}
-          <span className="sev HIGH">HIGH</span> <span className="sev MODERATE">MODERATE</span> or{" "}
-          <span className="sev LOW">LOW</span> so you know which findings actually move the needle.
+          <span className="sev HIGH">HIGH</span> <span className="sev MODERATE">MODERATE</span>{" "}
+          or <span className="sev LOW">LOW</span> so you know which findings actually move the
+          needle.
         </li>
         <li>
-          <strong>Use the guides if you get stuck.</strong> &ldquo;Go to next unanswered clue&rdquo;
-          jumps you straight to what&rsquo;s left; &ldquo;Mark remaining as no waste&rdquo; clears
-          the rest in one tap.
+          <strong>Use the guides if you get stuck.</strong> &ldquo;Go to next unanswered
+          clue&rdquo; jumps you straight to what&rsquo;s left; &ldquo;Mark remaining as no
+          waste&rdquo; clears the rest in one tap.
         </li>
         <li>
-          <strong>Close the case.</strong> Once every clue is examined, generate the audit report —
-          avoidable CO₂, rupee savings, your prime suspects with fixes, and a transparent
-          &ldquo;show the working&rdquo; table. Print or save it as a PDF.
+          <strong>Close the case.</strong> Once every clue is examined, generate the audit
+          report — avoidable CO₂, rupee savings, your prime suspects with fixes, and a
+          transparent &ldquo;show the working&rdquo; table. Print or save it as a PDF.
         </li>
         <li>
-          <strong>Act, then re-run.</strong> Fix the top suspects and audit the same scene again
-          later — the report compares against your last one so you can see whether the fixes stuck.
-          Your progress <strong>autosaves</strong>, so you can stop and resume anytime.
+          <strong>Act, then re-run.</strong> Fix the top suspects and audit the same scene
+          again later — the report compares against your last one so you can see whether the
+          fixes stuck. Your progress <strong>autosaves</strong>, so you can stop and resume
+          anytime.
         </li>
       </ol>
 
       <details className="method-box sources-box">
         <summary>📚 Sources &amp; methodology — where the numbers come from</summary>
         <p className="hint" style={{ margin: "8px 0 12px" }}>
-          Every figure is a <strong>typical annual estimate</strong>, not a meter reading — aligned
-          with public emission-factor data from the bodies below. Tariffs (₹/kWh) and the energy
-          embodied in water vary by region and utility, so treat results as directional, not exact.
+          Every figure is a <strong>typical annual estimate</strong>, not a meter reading —
+          aligned with public emission-factor data from the bodies below. Tariffs (₹/kWh) and
+          the energy embodied in water vary by region and utility, so treat results as
+          directional, not exact.
         </p>
         <ul className="sources">
           {SOURCES.map((s) => (
@@ -114,9 +118,9 @@ export function FieldManual() {
           ))}
         </ul>
         <p className="hint" style={{ marginTop: 12 }}>
-          The exact factors the app uses (electricity ₹8/kWh &amp; 0.82 kg CO₂/kWh, petrol ₹105/L
-          &amp; 2.3 kg CO₂/L, water ₹0.03/L) are listed in the report&rsquo;s &ldquo;Show the
-          working&rdquo; section.
+          The exact factors the app uses (electricity ₹8/kWh &amp; 0.82 kg CO₂/kWh, petrol
+          ₹105/L &amp; 2.3 kg CO₂/L, water ₹0.03/L) are listed in the report&rsquo;s
+          &ldquo;Show the working&rdquo; section.
         </p>
       </details>
     </section>

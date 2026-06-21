@@ -47,5 +47,7 @@ export function Spotlight({ enabled }: { enabled: boolean }) {
   }, [enabled]);
 
   if (!enabled) return null;
-  return <div className="spotlight" ref={ref} aria-hidden="true" style={{ display: "block" }} />;
+  return (
+    <div className="spotlight" ref={ref} aria-hidden="true" style={{ display: "block" }} />
+  );
 }
