@@ -26,8 +26,8 @@ export function SceneMap({
     <div className={"scene" + (flashlight ? " flashlight" : "")}>
       <div className="scene-roof" aria-hidden="true" />
       <p className="scene-label">
-        🏠 The scene — {mode === "home" ? "your home" : "the building"}. Tap a room to investigate
-        it.
+        🏠 The scene — {mode === "home" ? "your home" : "the building"}. Tap a room to
+        investigate it.
       </p>
       <div className="scene-rooms">
         {rooms.map((r, i) => {
@@ -40,7 +40,9 @@ export function SceneMap({
               onClick={() => onPick(i)}
               aria-label={
                 `${r.zone}: ${r.done} of ${r.total} clues examined` +
-                (r.found > 0 ? `, ${r.found} piece${r.found === 1 ? "" : "s"} of evidence found` : "") +
+                (r.found > 0
+                  ? `, ${r.found} piece${r.found === 1 ? "" : "s"} of evidence found`
+                  : "") +
                 (cleared ? " (cleared)" : "")
               }
             >

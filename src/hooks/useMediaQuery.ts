@@ -18,6 +18,5 @@ export function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-export const usePrefersReducedMotion = () =>
-  useMediaQuery("(prefers-reduced-motion: reduce)");
+export const usePrefersReducedMotion = () => useMediaQuery("(prefers-reduced-motion: reduce)");
 export const useFinePointer = () => useMediaQuery("(pointer: fine)");

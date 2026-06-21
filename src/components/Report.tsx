@@ -1,14 +1,7 @@
 import { useMemo } from "react";
 import type { Mode } from "../core/clues";
-import {
-  cluesForMode,
-  findings,
-  totals,
-  verdict,
-  rank,
-  fmt,
-  type Answers,
-} from "../core/audit";
+import { cluesForMode, findings, totals, verdict, rank, type Answers } from "../core/audit";
+import { fmt, formatDateLong, formatDateShort } from "../lib/format";
 import { CountUp } from "./CountUp";
 import { Equivalences } from "./Equivalences";
 import { EvidenceBoard } from "./EvidenceBoard";
@@ -38,11 +31,7 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
   const v = verdict(ratio);
   const detRank = rank(ratio, nFound);
 
-  const filed = filedAt.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const filed = formatDateLong(filedAt);
 
   const suspects = found.slice(0, 3);
   const others = found.slice(3);
@@ -54,11 +43,7 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
           previous.co2 > 0
             ? Math.round((Math.abs(tot.co2 - previous.co2) / previous.co2) * 100)
             : 0,
-        when: new Date(previous.at).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        }),
+        when: formatDateShort(new Date(previous.at)),
         improved: tot.co2 < previous.co2,
       }
     : null;
@@ -78,8 +63,8 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
             {detRank}
           </p>
         </div>
-        <div className="stamp verdict-stamp stamp-anim" key={v.s}>
-          {v.s}
+        <div className="stamp verdict-stamp stamp-anim" key={v.label}>
+          {v.label}
         </div>
       </div>
 
@@ -90,7 +75,10 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
           className={`compare ${cmp.improved ? "better" : cmp.diff > 0 ? "worse" : "flat"}`}
         >
           🔁 Compared with your last {mode === "home" ? "home" : "classroom/office"} audit on{" "}
-          {cmp.when}: <strong>{fmt(previous!.co2)} kg → {fmt(tot.co2)} kg</strong>{" "}
+          {cmp.when}:{" "}
+          <strong>
+            {fmt(previous!.co2)} kg → {fmt(tot.co2)} kg
+          </strong>{" "}
           {cmp.diff === 0 ? (
             <>— no change yet. Make a fix and re-run.</>
           ) : cmp.improved ? (
@@ -142,16 +130,14 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
         )}
       </div>
 
-      {tot.co2 > 0 && (
-        <Equivalences co2={tot.co2} water={tot.water} reduceMotion={reduceMotion} />
-      )}
+      {tot.co2 > 0 && <Equivalences impact={tot} reduceMotion={reduceMotion} />}
 
       {nFound > 0 && (
         <>
           <h3 className="disp" style={{ fontSize: "1.2rem", marginTop: 10 }}>
             Prime suspects — fix these first
           </h3>
-          <EvidenceBoard suspects={suspects} verdict={v.s} />
+          <EvidenceBoard suspects={suspects} verdict={v.label} />
         </>
       )}
 
@@ -170,14 +156,14 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
             </thead>
             <tbody>
               {others.map((f) => (
-                <tr key={f.c.id}>
+                <tr key={f.clue.id}>
                   <td>
-                    {f.c.ico} {f.c.q}
-                    {f.c.type === "count" ? ` (×${f.n})` : ""}
+                    {f.clue.ico} {f.clue.q}
+                    {f.clue.type === "count" ? ` (×${f.count})` : ""}
                   </td>
-                  <td>{f.c.fix}</td>
+                  <td>{f.clue.fix}</td>
                   <td className="mono">
-                    {fmt(f.im.co2)} kg · ₹{fmt(f.im.cost)}
+                    {fmt(f.impact.co2)} kg · ₹{fmt(f.impact.cost)}
                   </td>
                 </tr>
               ))}
@@ -189,10 +175,11 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
       <details className="method-box" style={{ marginTop: 22 }}>
         <summary>📐 Show the working — how every number was calculated</summary>
         <p className="hint" style={{ margin: "8px 0" }}>
-          This is the auditor&rsquo;s ledger. Assumptions: electricity ₹8/kWh and 0.82 kg CO₂/kWh
-          (Indian grid average), petrol ₹105/L and 2.3 kg CO₂/L, water ₹0.03/L including pumping
-          &amp; treatment energy. All figures are typical annual estimates, not meter readings — a
-          real audit would measure. Adjust mentally for your tariff and habits.
+          This is the auditor&rsquo;s ledger. Assumptions: electricity ₹8/kWh and 0.82 kg
+          CO₂/kWh (Indian grid average), petrol ₹105/L and 2.3 kg CO₂/L, water ₹0.03/L
+          including pumping &amp; treatment energy. All figures are typical annual estimates,
+          not meter readings — a real audit would measure. Adjust mentally for your tariff and
+          habits.
         </p>
         {found.length > 0 ? (
           <table className="method">
@@ -206,13 +193,13 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
             <tbody>
               {found.map((f) => {
                 const parts: string[] = [];
-                if (f.c.kwh) parts.push(`${f.c.kwh} kWh/yr × ${f.n}`);
-                if (f.c.fuel) parts.push(`${f.c.fuel} L petrol/yr × ${f.n}`);
-                if (f.c.water) parts.push(`${fmt(f.c.water)} L water/yr × ${f.n}`);
-                if (f.c.co2) parts.push(`${f.c.co2} kg CO₂ direct × ${f.n}`);
+                if (f.clue.kwh) parts.push(`${f.clue.kwh} kWh/yr × ${f.count}`);
+                if (f.clue.fuel) parts.push(`${f.clue.fuel} L petrol/yr × ${f.count}`);
+                if (f.clue.water) parts.push(`${fmt(f.clue.water)} L water/yr × ${f.count}`);
+                if (f.clue.co2) parts.push(`${f.clue.co2} kg CO₂ direct × ${f.count}`);
                 return (
-                  <tr key={f.c.id}>
-                    <td>{f.c.q}</td>
+                  <tr key={f.clue.id}>
+                    <td>{f.clue.q}</td>
                     <td className="mono">
                       {parts.map((p, i) => (
                         <span key={i}>
@@ -222,7 +209,7 @@ export function Report({ mode, answers, detName, reduceMotion, filedAt, previous
                       ))}
                     </td>
                     <td className="mono">
-                      {fmt(f.im.co2)} kg · ₹{fmt(f.im.cost)}
+                      {fmt(f.impact.co2)} kg · ₹{fmt(f.impact.cost)}
                     </td>
                   </tr>
                 );

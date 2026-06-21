@@ -1,0 +1,11 @@
+dist
+coverage
+playwright-report
+test-results
+package-lock.json
+# The design-system stylesheet is hand-authored in a compact, grouped format.
+src/styles.css
+# The clue ledger is authored as a compact data table (one clue ≈ 4 lines).
+src/core/clues.ts
+# Hand-tuned SVG artwork with grouped attributes per line.
+src/components/InspectorHoot.tsx

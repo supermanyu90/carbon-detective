@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { fmt, type Finding } from "../core/audit";
+import { type Finding } from "../core/audit";
+import { fmt } from "../lib/format";
 
 interface Line {
   x1: number;
@@ -12,7 +13,13 @@ interface Line {
  *  with red string running back to the verdict. The string is measured from the
  *  actual pin positions (via ResizeObserver), so it stays connected whether the
  *  cards sit in a row or stack on a narrow screen. */
-export function EvidenceBoard({ suspects, verdict }: { suspects: Finding[]; verdict: string }) {
+export function EvidenceBoard({
+  suspects,
+  verdict,
+}: {
+  suspects: Finding[];
+  verdict: string;
+}) {
   const n = suspects.length;
   const boardRef = useRef<HTMLDivElement>(null);
   const verdictPinRef = useRef<HTMLSpanElement>(null);
@@ -50,7 +57,12 @@ export function EvidenceBoard({ suspects, verdict }: { suspects: Finding[]; verd
   }, [suspects]);
 
   return (
-    <div className="evidence-board" ref={boardRef} role="group" aria-label="Prime suspects evidence board">
+    <div
+      className="evidence-board"
+      ref={boardRef}
+      role="group"
+      aria-label="Prime suspects evidence board"
+    >
       <svg className="board-string" viewBox={`0 0 ${size.w} ${size.h}`} aria-hidden="true">
         {lines.map((l, i) => (
           <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
@@ -66,7 +78,7 @@ export function EvidenceBoard({ suspects, verdict }: { suspects: Finding[]; verd
         {suspects.map((f, i) => (
           <article
             className="suspect-card"
-            key={f.c.id}
+            key={f.clue.id}
             style={{ "--rot": `${(i - (n - 1) / 2) * 2.4}deg` } as CSSProperties}
           >
             <span
@@ -78,17 +90,17 @@ export function EvidenceBoard({ suspects, verdict }: { suspects: Finding[]; verd
             />
             <p className="card-rank">Suspect #{i + 1}</p>
             <p className="card-title">
-              {f.c.ico} {f.c.q}
-              {f.c.type === "count" && (
+              {f.clue.ico} {f.clue.q}
+              {f.clue.type === "count" && (
                 <span className="mono">
                   {" "}
-                  (× {f.n} {f.c.unit})
+                  (× {f.count} {f.clue.unit})
                 </span>
               )}
             </p>
-            <p className="card-fix">Fix: {f.c.fix}</p>
+            <p className="card-fix">Fix: {f.clue.fix}</p>
             <p className="card-save">
-              ≈ {fmt(f.im.co2)} kg CO₂ · ₹{fmt(f.im.cost)} / yr
+              ≈ {fmt(f.impact.co2)} kg CO₂ · ₹{fmt(f.impact.cost)} / yr
             </p>
           </article>
         ))}

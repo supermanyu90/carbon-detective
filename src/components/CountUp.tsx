@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fmt } from "../lib/format";
 
 interface Props {
   value: number;
@@ -31,7 +32,7 @@ export function CountUp({ value, prefix = "", suffix = "", reduceMotion }: Props
   return (
     <>
       {prefix}
-      {display.toLocaleString("en-IN")}
+      {fmt(display)}
       {suffix}
     </>
   );

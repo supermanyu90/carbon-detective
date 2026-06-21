@@ -5,9 +5,11 @@ import {
   zonesForMode,
   impact,
   severity,
-  fmt,
+  clampCount,
+  MAX_COUNT,
   type Answers,
 } from "../core/audit";
+import { fmt } from "../lib/format";
 import { SceneMap, type Room } from "./SceneMap";
 
 interface Props {
@@ -42,7 +44,7 @@ function CountInput({
       className="val"
       type="number"
       min={0}
-      max={99}
+      max={MAX_COUNT}
       inputMode="numeric"
       aria-label={`Number of ${unit}`}
       value={shown}
@@ -52,7 +54,7 @@ function CountInput({
         const v = e.target.value;
         setDraft(v);
         if (v === "") return; // allow an empty field while typing
-        onSet(Math.max(0, Math.min(99, Math.floor(Number(v) || 0))));
+        onSet(clampCount(Number(v)));
       }}
       onBlur={() => {
         if (draft === "") onSet(0); // empty means "none"
@@ -78,8 +80,9 @@ function ClueRow({
   const a = answers[c.id];
   const sev = severity(c);
   const found = !!a?.found;
-  const note = found
-    ? `📌 Evidence logged — est. ${fmt(impact(c, a!.n).co2)} kg CO₂ & ₹${fmt(impact(c, a!.n).cost)} per year`
+  const logged = found ? impact(c, a!.n) : null;
+  const note = logged
+    ? `📌 Evidence logged — est. ${fmt(logged.co2)} kg CO₂ & ₹${fmt(logged.cost)} per year`
     : "";
 
   return (

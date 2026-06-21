@@ -9,6 +9,8 @@ import {
   verdict,
   rank,
   equivalents,
+  clampCount,
+  MAX_COUNT,
   cluesForMode,
   zonesForMode,
   type Answers,
@@ -91,15 +93,15 @@ describe("findings() and totals()", () => {
 
   it("includes only found clues, sorted by CO₂ descending", () => {
     const f = findings("home", answers);
-    expect(f.map((x) => x.c.id)).toEqual(["aclow", "standby"]);
-    expect(f[0].im.co2).toBeGreaterThan(f[1].im.co2);
+    expect(f.map((x) => x.clue.id)).toEqual(["aclow", "standby"]);
+    expect(f[0].impact.co2).toBeGreaterThan(f[1].impact.co2);
   });
 
   it("respects per-clue count n", () => {
     const f = findings("home", answers);
-    const standby = f.find((x) => x.c.id === "standby")!;
-    expect(standby.n).toBe(2);
-    expect(standby.im.kwh).toBe(96);
+    const standby = f.find((x) => x.clue.id === "standby")!;
+    expect(standby.count).toBe(2);
+    expect(standby.impact.kwh).toBe(96);
   });
 
   it("excludes findings from the other mode", () => {
@@ -120,15 +122,15 @@ describe("findings() and totals()", () => {
 
 describe("verdict() bands", () => {
   it("maps each ratio band to its stamp", () => {
-    expect(verdict(0).s).toBe("SPOTLESS");
-    expect(verdict(0.1).s).toBe("MINOR LEAKS");
-    expect(verdict(0.3).s).toBe("CASE PROVEN");
-    expect(verdict(0.8).s).toBe("MAJOR FINDINGS");
+    expect(verdict(0).label).toBe("SPOTLESS");
+    expect(verdict(0.1).label).toBe("MINOR LEAKS");
+    expect(verdict(0.3).label).toBe("CASE PROVEN");
+    expect(verdict(0.8).label).toBe("MAJOR FINDINGS");
   });
 
   it("uses inclusive lower / exclusive upper boundaries", () => {
-    expect(verdict(0.25).s).toBe("CASE PROVEN"); // not < 0.25
-    expect(verdict(0.5).s).toBe("MAJOR FINDINGS"); // not < 0.5
+    expect(verdict(0.25).label).toBe("CASE PROVEN"); // not < 0.25
+    expect(verdict(0.5).label).toBe("MAJOR FINDINGS"); // not < 0.5
   });
 });
 
@@ -151,6 +153,24 @@ describe("equivalents()", () => {
     expect(eq.phones).toBeCloseTo(22000, 6);
     expect(eq.km).toBeCloseTo(1222.22, 1);
     expect(eq.buckets).toBeCloseTo(10, 6);
+  });
+});
+
+describe("clampCount()", () => {
+  it("keeps whole values within [0, MAX_COUNT]", () => {
+    expect(clampCount(5)).toBe(5);
+    expect(clampCount(0)).toBe(0);
+    expect(clampCount(MAX_COUNT)).toBe(MAX_COUNT);
+  });
+
+  it("clamps out-of-range values to the nearest bound", () => {
+    expect(clampCount(-3)).toBe(0);
+    expect(clampCount(MAX_COUNT + 50)).toBe(MAX_COUNT);
+  });
+
+  it("floors fractional input and treats non-finite values as 0", () => {
+    expect(clampCount(3.7)).toBe(3);
+    expect(clampCount(NaN)).toBe(0);
   });
 });
 

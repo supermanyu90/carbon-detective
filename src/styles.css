@@ -364,8 +364,22 @@ details.method-box summary{cursor:pointer;font-family:var(--mono);font-size:.9re
 .source-org{color:var(--ink-soft);font-size:.9rem}
 .source-use{display:block;font-size:.9rem;margin-top:3px}
 
+/* ============ RESPONSIBLE-USE / PRIVACY PANEL ============ */
+.responsible h2{font-size:1.25rem}
+.pledge{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.pledge li{border-left:3px solid var(--evidence);padding:2px 0 2px 12px;font-size:.95rem}
+
 .hidden{display:none !important}
 :focus-visible{outline:3px solid var(--tag-blue);outline-offset:2px;border-radius:6px}
+
+/* Keyboard skip link — off-screen until focused */
+.skip-link{
+  position:fixed;left:12px;top:-60px;z-index:200;
+  background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.9rem;
+  padding:.6em 1em;border:1.5px solid var(--paper);border-radius:8px;
+  text-decoration:none;transition:top .15s ease;
+}
+.skip-link:focus{top:12px}
 
 /* ============ DETECTIVE CURSOR ============ */
 body{cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'><circle cx='12' cy='12' r='7.5' fill='%23F7F2E7' fill-opacity='.92' stroke='%2323201A' stroke-width='2.4'/><line x1='17.5' y1='17.5' x2='26' y2='26' stroke='%2323201A' stroke-width='4' stroke-linecap='round'/><circle cx='9.5' cy='9.5' r='2.2' fill='white'/></svg>") 12 12, auto}
