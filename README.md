@@ -75,6 +75,14 @@ eslint.config.js   ← flat ESLint config
 vercel.json        ← security headers + cache policy (also public/_headers)
 ```
 
+<img width="1456" height="829" alt="1-briefing" src="https://github.com/user-attachments/assets/4ddc3646-31ef-444e-a55a-4e7fa8c19d26" />
+  <img width="1512" height="805" alt="2-investigation-zones" src="https://github.com/user-attachments/assets/2a266cba-e1cc-4d1f-9afe-fb71bed773d7" />
+<img width="1512" height="805" alt="3-evidence-logged" src="https://github.com/user-attachments/assets/1e899854-ec9b-4b2c-9b0f-4b3610bad8eb" />
+<img width="1512" height="805" alt="4-audit-report" src="https://github.com/user-attachments/assets/d400b70b-8791-4547-9174-3696843da1c0" />
+<img width="1512" height="805" alt="5-impact-and-ai-analyst" src="https://github.com/user-attachments/assets/30e19ffe-1ddc-4794-96da-41972b7b8b76" />
+
+
+
 ## Responsible AI, privacy & transparency
 
 This is a **deterministic, on-device** tool — and that is a deliberate, responsible choice.
